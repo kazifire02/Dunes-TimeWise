@@ -1,0 +1,226 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Dunes TimeWise | New Admission</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .admission-info {
+            background: #fff0f4;
+            border-left: 4px solid #800020;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin: 15px 0 20px;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .admission-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .admission-actions button {
+            width: 100%;
+        }
+
+        .back-link {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    padding: 10px;
+    background: transparent !important;
+    color: #800020 !important;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    box-shadow: none;
+}
+
+.back-link:hover {
+    background: transparent !important;
+    color: #600018 !important;
+    text-decoration: underline;
+}
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+/* Back to Dashboard - text link only */
+.card a.back-link,
+.card a.back-link:link,
+.card a.back-link:visited {
+    display: block !important;
+    width: fit-content !important;
+    margin: 20px auto 0 !important;
+    padding: 0 !important;
+
+    background: none !important;
+    background-color: transparent !important;
+
+    color: #800020 !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.card a.back-link:hover {
+    background: transparent !important;
+    color: #600018 !important;
+    text-decoration: underline !important;
+}
+
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="school-brand">
+        <img
+            src="{{ url_for('static', filename='dis_logo.png') }}"
+            alt="School Logo"
+            class="school-logo register-logo"
+        >
+
+        <h1>Dunes TimeWise</h1>
+        <p class="subtitle">Every Minute Matters.</p>
+    </div>
+
+    <div class="card">
+
+        <h1>New Student Admission</h1>
+
+        <p>
+            Enter the student's details to add them
+            to the school roster.
+        </p>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="notification">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="admission-info">
+            Once added, the student will automatically
+            appear in the Late Arrival Registration search.
+        </div>
+
+        <form method="POST"
+              action="{{ url_for('new_admission') }}">
+
+            <label for="student_no">
+                Student Number
+            </label>
+
+            <input
+                type="text"
+                id="student_no"
+                name="student_no"
+                placeholder="Enter student number"
+                maxlength="30"
+                required
+            >
+
+            <label for="student_name">
+                Student Full Name
+            </label>
+
+            <input
+                type="text"
+                id="student_name"
+                name="student_name"
+                placeholder="Enter student full name"
+                maxlength="150"
+                required
+            >
+
+            <label for="grade">
+                Grade
+            </label>
+
+            <select name="grade"
+                    id="grade"
+                    required>
+
+                <option value="">
+                    Select Grade
+                </option>
+
+                <option value="KG1">KG1</option>
+                <option value="KG2">KG2</option>
+
+                {% for grade in range(1, 13) %}
+                    <option value="{{ grade }}">
+                        Grade {{ grade }}
+                    </option>
+                {% endfor %}
+
+            </select>
+
+            <label for="section">
+                Section
+            </label>
+
+            <select name="section"
+                    id="section"
+                    required>
+
+                <option value="">
+                    Select Section
+                </option>
+
+                {% for section in ["A", "B", "C", "D", "E", "F"] %}
+                    <option value="{{ section }}">
+                        Section {{ section }}
+                    </option>
+                {% endfor %}
+
+            </select>
+
+            <div class="admission-actions">
+
+                <button type="submit">
+                    ✓ Add Student
+                </button>
+
+                <button type="reset"
+                        class="reset-btn">
+                    Clear Form
+                </button>
+
+            </div>
+
+        </form>
+
+        <a href="{{ url_for('dashboard') }}"
+           class="back-link">
+            ← Back to Dashboard
+        </a>
+
+    </div>
+</div>
+
+</body>
+</html>

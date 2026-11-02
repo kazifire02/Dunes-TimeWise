@@ -1,0 +1,250 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remove Student | Dunes TimeWise</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .remove-card {
+            max-width: 520px;
+            margin: 30px auto;
+            padding: 30px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+        }
+
+        .remove-card h1 {
+            color: #800020;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .remove-card .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        .remove-card label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .remove-card input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+
+        .remove-card button {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .find-btn {
+            background: #800020;
+            color: white;
+        }
+
+        .remove-btn {
+            background: #b42332;
+            color: white;
+            margin-top: 15px;
+        }
+
+        .remove-btn:hover {
+            background: #8f1927;
+        }
+
+        .student-details {
+            margin-top: 25px;
+            padding: 18px;
+            border: 1px solid #e5c5ce;
+            background: #fff8fa;
+            border-radius: 10px;
+        }
+
+        .student-details h3 {
+            color: #800020;
+            margin-top: 0;
+        }
+
+        .student-details p {
+            margin: 10px 0;
+        }
+
+        .warning {
+            margin-top: 15px;
+            color: #9c2430;
+            font-size: 14px;
+        }
+
+        .remove-card a.back-link,
+        .remove-card a.back-link:visited {
+            display: block !important;
+            width: fit-content !important;
+            margin: 25px auto 0 !important;
+            padding: 0 !important;
+            background: transparent !important;
+            color: #800020 !important;
+            text-decoration: none !important;
+            box-shadow: none !important;
+            border: none !important;
+            font-weight: 600;
+        }
+
+        .remove-card a.back-link:hover {
+            text-decoration: underline !important;
+        }
+
+        .message {
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            background: #fff0f4;
+            color: #800020;
+        }
+.school-brand img {
+    width: 100px !important;
+    height: 100px !important;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+    background: transparent !important;
+    display: block;
+    margin: 0 auto 12px;
+}
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <div class="school-brand">
+            <img src="{{ url_for('static', filename='dis_logo.png') }}"
+                 alt="School Logo">
+            <h2>Dunes TimeWise</h2>
+            <p>Every Minute Matters.</p>
+        </div>
+
+        <div class="remove-card">
+
+            <h1>Remove Student</h1>
+            <p class="subtitle">
+                Enter the admission number to find a student.
+            </p>
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="message">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Search by admission number -->
+            <form method="GET"
+                  action="{{ url_for('remove_student') }}">
+
+                <label for="student_no">
+                    Admission Number *
+                </label>
+
+                <input
+                    type="text"
+                    id="student_no"
+                    name="student_no"
+                    placeholder="Enter admission number"
+                    value="{{ search_number or '' }}"
+                    required
+                    autocomplete="off"
+                >
+
+                <button type="submit" class="find-btn">
+                    Find Student
+                </button>
+            </form>
+
+            {% if student %}
+
+                <div class="student-details">
+
+                    <h3>Student Details</h3>
+
+                    <p>
+                        <strong>Name:</strong>
+                        {{ student.student_name }}
+                    </p>
+
+                    <p>
+                        <strong>Admission Number:</strong>
+                        {{ student.student_no }}
+                    </p>
+
+                    <p>
+                        <strong>Grade:</strong>
+                        {{ student.grade }}
+                    </p>
+
+                    <p>
+                        <strong>Section:</strong>
+                        {{ student.section }}
+                    </p>
+
+                    <p class="warning">
+                        Please verify the admission number and
+                        student details before removing this student.
+                    </p>
+
+                    <!-- Actual removal -->
+                    <form method="POST"
+                          action="{{ url_for('remove_student') }}"
+                          onsubmit="return confirm(
+                            'Are you sure you want to remove this student from the active roster?'
+                          );">
+
+                        <input
+                            type="hidden"
+                            name="student_no"
+                            value="{{ student.student_no }}"
+                        >
+
+                        <button type="submit" class="remove-btn">
+                            Remove Student
+                        </button>
+
+                    </form>
+
+                </div>
+
+            {% elif search_number %}
+
+                <div class="message" style="margin-top:20px;">
+                    No student found with that admission number.
+                </div>
+
+            {% endif %}
+
+            <a href="{{ url_for('dashboard') }}"
+               class="back-link">
+                ← Back to Dashboard
+            </a>
+
+        </div>
+    </div>
+</body>
+</html>

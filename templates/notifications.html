@@ -1,0 +1,648 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Dunes TimeWise | Punctuality Alerts</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .notifications-container {
+            max-width: 1100px;
+            margin: 35px auto;
+            padding: 25px;
+        }
+
+        .notifications-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .notifications-header h1 {
+            color: #800020;
+            margin-bottom: 8px;
+        }
+
+        .notifications-header p {
+            color: #666;
+        }
+
+        .notification-stats {
+            display: grid;
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .notification-stat {
+            background: white;
+            border: 1px solid #ead8dd;
+            border-radius: 14px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .notification-stat h2 {
+            color: #800020;
+            font-size: 32px;
+            margin: 10px 0;
+        }
+
+        .notification-stat p {
+            color: #666;
+            margin: 0;
+        }
+
+        .notification-filters {
+            background: white;
+            border: 1px solid #ead8dd;
+            padding: 22px;
+            border-radius: 14px;
+            margin-bottom: 25px;
+        }
+
+        .notification-filter-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .notification-filter-row select {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .alert-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .alert-tab {
+            border: none;
+            background: #f2f2f2;
+            color: #555;
+            padding: 13px 8px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .alert-tab.active {
+            background: #800020;
+            color: white;
+        }
+
+        .alert-results-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            gap: 12px;
+        }
+
+        .alert-results-heading h2 {
+            color: #800020;
+            font-size: 21px;
+        }
+
+        .alert-count {
+            background: #f8e4ea;
+            color: #800020;
+            border-radius: 20px;
+            padding: 7px 14px;
+            font-weight: bold;
+        }
+
+        .student-alert {
+            background: white;
+            border: 1px solid #ead8dd;
+            border-radius: 14px;
+            padding: 22px;
+            margin-bottom: 18px;
+        }
+
+        .student-alert-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .student-alert h3 {
+            color: #800020;
+            margin: 0 0 6px;
+        }
+
+        .student-alert .student-class {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .alert-type-badge {
+            padding: 7px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .alert-type-badge.consecutive,
+        .alert-type-badge.both {
+            background: #fce3e9;
+            color: #a1002a;
+        }
+
+        .alert-type-badge.monthly {
+            background: #fff0d7;
+            color: #946000;
+        }
+
+        .alert-reasons {
+            margin: 18px 0;
+            display: grid;
+            gap: 9px;
+        }
+
+        .alert-reason {
+            padding: 12px;
+            background: #fff8f0;
+            border-radius: 8px;
+        }
+
+        .alert-reason strong {
+            color: #800020;
+        }
+
+        .alert-dates {
+            color: #666;
+            font-size: 13px;
+            margin-top: 6px;
+            line-height: 1.7;
+        }
+
+        .details-button {
+            background: transparent;
+            border: 1px solid #800020;
+            color: #800020;
+            padding: 11px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+        }
+
+        .details-button:hover {
+            background: #fff0f4;
+        }
+
+        .arrival-details {
+            display: none;
+            margin-top: 16px;
+            overflow-x: auto;
+        }
+
+        .arrival-details.open {
+            display: block;
+        }
+
+        .arrival-details table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .arrival-details th {
+            background: #800020;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .arrival-details td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .arrival-details tr:nth-child(even) td {
+            background: #fff8f0;
+        }
+
+        .empty-alerts {
+            background: white;
+            padding: 45px 20px;
+            text-align: center;
+            border-radius: 14px;
+            color: #777;
+        }
+
+        .notifications-back {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 22px;
+            background: #800020;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 600px) {
+            .notifications-container {
+                padding: 14px;
+                margin: 15px auto;
+            }
+
+            .alert-tabs {
+                grid-template-columns: 1fr;
+            }
+
+            .notification-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .student-alert-top {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="notifications-container">
+
+    <div class="notifications-header">
+
+        <h1>Dunes TimeWise | Punctuality Alerts</h1>
+
+        <p class="subtitle">
+            Every Minute Matters.
+        </p>
+
+        <p>
+            Identify students with recurring
+            late arrivals and monitor punctuality.
+        </p>
+
+    </div>
+
+    <!-- SUMMARY CARDS -->
+
+    <div class="notification-stats">
+
+        <div class="notification-stat">
+            <p>3+ Consecutive Days</p>
+            <h2>{{ consecutive_total }}</h2>
+            <p>Students Flagged</p>
+        </div>
+
+        <div class="notification-stat">
+            <p>2+ Monthly</p>
+            <h2>{{ monthly_total }}</h2>
+            <p>Students Flagged</p>
+        </div>
+
+    </div>
+
+    <!-- FILTERS -->
+
+    <div class="notification-filters">
+
+        <form method="GET"
+              action="{{ url_for('notifications') }}"
+              id="periodForm">
+
+            <div class="notification-filter-row">
+
+                <select name="month"
+                        id="monthSelect">
+
+                    {% for m in range(1, 13) %}
+
+                        <option value="{{ m }}"
+                            {% if selected_month == m %}
+                                selected
+                            {% endif %}>
+
+                            {{ [
+                                'January', 'February',
+                                'March', 'April',
+                                'May', 'June',
+                                'July', 'August',
+                                'September', 'October',
+                                'November', 'December'
+                            ][m - 1] }}
+
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+                <select name="year"
+                        id="yearSelect">
+
+                    {% for y in range(
+                        selected_year - 3,
+                        selected_year + 2
+                    ) %}
+
+                        <option value="{{ y }}"
+                            {% if selected_year == y %}
+                                selected
+                            {% endif %}>
+                            {{ y }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+        </form>
+
+        <!-- ALERT TABS -->
+
+        <div class="alert-tabs">
+
+            <button class="alert-tab active"
+                    type="button"
+                    data-filter="all">
+                All Alerts
+            </button>
+
+            <button class="alert-tab"
+                    type="button"
+                    data-filter="consecutive">
+                3+ Consecutive Days
+            </button>
+
+            <button class="alert-tab"
+                    type="button"
+                    data-filter="monthly">
+                2+ Monthly
+            </button>
+
+        </div>
+
+    </div>
+
+    <div class="alert-results-heading">
+
+        <h2>Student Notifications</h2>
+
+        <span class="alert-count"
+              id="visibleCount">
+            {{ alert_total }} Students
+        </span>
+
+    </div>
+
+    <!-- STUDENT NOTIFICATIONS -->
+
+    <div id="alertsContainer">
+
+        {% for alert in alerts %}
+
+        <div class="student-alert"
+             data-type="{{ alert.type }}">
+
+            <div class="student-alert-top">
+
+                <div>
+
+                    <h3>
+                        {{ alert.name }}
+                    </h3>
+
+                    <div class="student-class">
+                        Grade {{ alert.grade }}
+                        - Section {{ alert.section }}
+                    </div>
+
+                </div>
+
+                <span class="alert-type-badge {{ alert.type }}">
+
+                    {% if alert.type == 'both' %}
+                        Both Alerts
+                    {% elif alert.type == 'consecutive' %}
+                        Consecutive
+                    {% else %}
+                        Monthly
+                    {% endif %}
+
+                </span>
+
+            </div>
+
+            <div class="alert-reasons">
+
+                {% if alert.consecutive_count >= 3 %}
+
+                <div class="alert-reason">
+
+                    <strong>
+                        {{ alert.consecutive_count }}
+                        Consecutive School Days
+                    </strong>
+
+                    <div class="alert-dates">
+
+                        {% for d in alert.consecutive_dates %}
+                            {{ d }}{% if not loop.last %},
+                            {% endif %}
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+                {% if alert.monthly_count >= 2 %}
+
+                <div class="alert-reason">
+
+                    <strong>
+                        {{ alert.monthly_count }}
+                        Late Arrivals in
+                        {{ month_label }}
+                    </strong>
+
+                    <div class="alert-dates">
+                        Click below to view all
+                        arrival dates and times.
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+            <button type="button"
+                    class="details-button"
+                    onclick="toggleDetails(this)">
+
+                View Arrival Details
+
+            </button>
+
+            <div class="arrival-details">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Day</th>
+                            <th>Arrival Time</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for arrival in alert.arrival_details %}
+
+                        <tr>
+                            <td>{{ arrival.date }}</td>
+                            <td>{{ arrival.day }}</td>
+                            <td>{{ arrival.time }}</td>
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    <div class="empty-alerts"
+         id="emptyAlerts"
+         style="display:none;">
+
+        <h3>No Alerts Found</h3>
+
+        <p>
+            No students match this alert category
+            for the selected month.
+        </p>
+
+    </div>
+
+    <a href="{{ url_for('dashboard') }}"
+       class="notifications-back">
+
+        &#8592; Back to Dashboard
+
+    </a>
+
+</div>
+
+<script>
+
+const tabs =
+    document.querySelectorAll(".alert-tab");
+
+const cards =
+    document.querySelectorAll(".student-alert");
+
+const countLabel =
+    document.getElementById("visibleCount");
+
+const emptyAlerts =
+    document.getElementById("emptyAlerts");
+
+function filterAlerts(type) {
+
+    let visible = 0;
+
+    cards.forEach(card => {
+
+        const cardType = card.dataset.type;
+
+        const matches =
+            type === "all" ||
+            cardType === type ||
+            cardType === "both";
+
+        card.style.display =
+            matches ? "block" : "none";
+
+        if (matches) visible++;
+
+    });
+
+    countLabel.textContent =
+        `${visible} Student(s)`;
+
+    emptyAlerts.style.display =
+        visible === 0 ? "block" : "none";
+}
+
+tabs.forEach(tab => {
+
+    tab.addEventListener("click", () => {
+
+        tabs.forEach(item =>
+            item.classList.remove("active")
+        );
+
+        tab.classList.add("active");
+
+        filterAlerts(tab.dataset.filter);
+
+    });
+
+});
+
+function toggleDetails(button) {
+
+    const details =
+        button.nextElementSibling;
+
+    const isOpen =
+        details.classList.toggle("open");
+
+    button.textContent = isOpen
+        ? "Hide Arrival Details"
+        : "View Arrival Details";
+}
+
+document.getElementById("monthSelect")
+    .addEventListener("change", () => {
+        document.getElementById("periodForm").submit();
+    });
+
+document.getElementById("yearSelect")
+    .addEventListener("change", () => {
+        document.getElementById("periodForm").submit();
+    });
+
+filterAlerts("all");
+
+</script>
+
+</body>
+</html>

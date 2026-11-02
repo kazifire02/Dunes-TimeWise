@@ -1,0 +1,152 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Dunes TimeWise | Reports</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <div class="dashboard-header">
+        <div>
+            <h1>Dunes TimeWise Reports</h1>
+            <p>Student Punctuality & Late Arrival Records</p>
+        </div>
+
+        <a href="{{ url_for('dashboard') }}"
+           class="register-link">
+            Dashboard
+        </a>
+    </div>
+
+    <!-- REPORT FILTERS -->
+    <form method="GET"
+          action="{{ url_for('reports') }}"
+          class="report-filters">
+
+        <div>
+            <label for="date">Date</label>
+            <input type="date"
+                   id="date"
+                   name="date"
+                   value="{{ report_date }}"
+                   required>
+        </div>
+
+        <div>
+            <label for="grade">Grade</label>
+
+            <select name="grade" id="grade">
+                <option value="">All Grades</option>
+
+                <option value="KG1"
+                    {% if selected_grade == 'KG1' %}selected{% endif %}>
+                    KG1
+                </option>
+
+                <option value="KG2"
+                    {% if selected_grade == 'KG2' %}selected{% endif %}>
+                    KG2
+                </option>
+
+                {% for grade in range(1, 13) %}
+                <option value="{{ grade }}"
+                    {% if selected_grade == grade|string %}selected{% endif %}>
+                    Grade {{ grade }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="section">Section</label>
+
+            <select name="section" id="section">
+                <option value="">All Sections</option>
+
+                {% for section in ['A','B','C','D','E','F'] %}
+                <option value="{{ section }}"
+                    {% if selected_section == section %}selected{% endif %}>
+                    {{ section }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="report-search-btn">
+            Search
+        </button>
+
+    </form>
+
+    <!-- REPORT SUMMARY AND DOWNLOAD -->
+    <div class="report-actions">
+
+        <div>
+            <h2>{{ total }} Late Arrivals</h2>
+            <p>Records for {{ report_date }}</p>
+        </div>
+
+        <a class="export-btn"
+           href="{{ url_for('export_report',
+                    date=report_date,
+                    grade=selected_grade,
+                    section=selected_section) }}">
+            Download Excel
+        </a>
+
+    </div>
+
+    <!-- REPORT TABLE -->
+    <div class="table-card">
+        <div class="table-wrapper">
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>Student Name</th>
+                        <th>Grade</th>
+                        <th>Section</th>
+                        <th>Arrival Time</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ student.student_name }}</td>
+                        <td>{{ student.grade }}</td>
+                        <td>{{ student.section }}</td>
+                        <td>
+                            {{ student.arrival_time.strftime('%I:%M:%S %p') }}
+                        </td>
+                    </tr>
+
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="empty-state">
+                            No records found for these filters.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

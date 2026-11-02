@@ -1,0 +1,892 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Dunes TimeWise | Student History</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .student-combobox {
+            position: relative;
+            width: 100%;
+        }
+
+        .student-combobox input[type="text"] {
+            width: 100%;
+            box-sizing: border-box;
+            padding-right: 40px;
+        }
+
+        .dropdown-arrow {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #800020;
+            user-select: none;
+            font-size: 15px;
+        }
+
+        .dropdown-arrow.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .student-options {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            max-height: 220px;
+            overflow-y: auto;
+            background: #ffffff;
+            border: 1px solid #dddddd;
+            border-radius: 8px;
+            margin-top: 4px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+        }
+
+        .student-options.open {
+            display: block;
+        }
+
+        .student-option {
+            padding: 11px 14px;
+            cursor: pointer;
+            color: #222222;
+            font-size: 14px;
+        }
+
+        .student-option:hover,
+        .student-option.active {
+            background: #fff0f4;
+            color: #800020;
+        }
+
+        .student-option.empty {
+            color: #777777;
+            cursor: default;
+        }
+
+        #studentCount {
+            font-size: 13px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="history-container">
+
+    <h1>Dunes TimeWise | Student History</h1>
+
+    <p class="subtitle">Every Minute Matters.</p>
+
+    <p>
+        View late arrival records across all grades,
+        or search by grade, section and student name.
+    </p>
+
+    <!-- SEARCH FORM -->
+
+    <form method="GET"
+          action="{{ url_for('student_history') }}"
+          class="history-form"
+          id="historyForm">
+
+        <!-- GRADE -->
+
+        <label for="grade">Grade</label>
+
+        <select name="grade" id="grade">
+
+            <option value=""
+                {% if not grade %}selected{% endif %}>
+                All Grades
+            </option>
+
+            <option value="KG1"
+                {% if grade == 'KG1' %}selected{% endif %}>
+                KG1
+            </option>
+
+            <option value="KG2"
+                {% if grade == 'KG2' %}selected{% endif %}>
+                KG2
+            </option>
+
+            {% for i in range(1, 13) %}
+                <option value="{{ i }}"
+                    {% if grade == i|string %}selected{% endif %}>
+                    Grade {{ i }}
+                </option>
+            {% endfor %}
+
+        </select>
+
+        <!-- SECTION -->
+
+        <label for="section">Section (Optional)</label>
+
+        <select name="section"
+                id="section"
+                disabled>
+            <option value="">All Sections</option>
+        </select>
+
+        <!-- SEARCHABLE STUDENT DROPDOWN -->
+
+        <label for="student_search">
+            Student Name (Optional)
+        </label>
+
+        <div class="student-combobox"
+             id="studentCombobox">
+
+            <input
+                type="text"
+                id="student_search"
+                placeholder="Select Grade and Section first"
+                autocomplete="off"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-expanded="false"
+                aria-controls="studentOptions"
+                disabled
+            >
+
+            <span
+                class="dropdown-arrow disabled"
+                id="dropdownArrow"
+                aria-hidden="true"
+            >▼</span>
+
+            <div
+                class="student-options"
+                id="studentOptions"
+                role="listbox"
+            ></div>
+
+        </div>
+
+        <!-- HIDDEN STUDENT NUMBER -->
+
+        <input
+            type="hidden"
+            name="student_no"
+            id="student_no"
+            value="{{ student_no|default('', true) }}"
+        >
+
+        <p id="studentCount"></p>
+
+        <!-- BUTTONS -->
+
+        <button type="submit">
+            Search History
+        </button>
+
+        <button
+            type="button"
+            class="reset-btn"
+            onclick="window.location.href='{{ url_for('student_history') }}'">
+            Clear Search
+        </button>
+
+    </form>
+
+    <!-- ERROR MESSAGES -->
+
+    {% if error %}
+        <div class="notification">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    <!-- SEARCH RESULTS -->
+
+    {% if searched and not error %}
+
+        <div class="history-summary">
+
+            <h2>
+                {% if name %}
+                    {{ name }}
+                {% elif not grade %}
+                    All Grades
+                {% elif grade in ['KG1', 'KG2'] %}
+                    {{ grade }}
+                {% else %}
+                    Grade {{ grade }}
+                {% endif %}
+            </h2>
+
+            <p>
+                {% if not grade %}
+                    All Grades
+                {% elif grade in ['KG1', 'KG2'] %}
+                    {{ grade }}
+                {% else %}
+                    Grade {{ grade }}
+                {% endif %}
+
+                {% if section %}
+                    - Section {{ section }}
+                {% else %}
+                    - All Sections
+                {% endif %}
+            </p>
+
+            <h3>
+                Total Late Arrivals: {{ total }}
+            </h3>
+
+        </div>
+
+        {% if students %}
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>Student Name</th>
+                        <th>Grade</th>
+                        <th>Section</th>
+                        <th>Date</th>
+                        <th>Day</th>
+                        <th>Arrival Time</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for student in students %}
+
+                    <tr>
+                        <td>{{ loop.index }}</td>
+
+                        <td>{{ student.student_name }}</td>
+
+                        <td>{{ student.grade }}</td>
+
+                        <td>{{ student.section }}</td>
+
+                        <td>
+                            {{ student.arrival_time.strftime('%d %B %Y') }}
+                        </td>
+
+                        <td>
+                            {{ student.arrival_time.strftime('%A') }}
+                        </td>
+
+                        <td>
+                            {{ student.arrival_time.strftime('%I:%M %p') }}
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        {% else %}
+
+            <div class="empty-state">
+                <h3>No Records Found</h3>
+
+                <p>
+                    No late arrivals match your search.
+                </p>
+            </div>
+
+        {% endif %}
+
+    {% endif %}
+
+    <!-- BACK TO DASHBOARD -->
+
+    <div class="history-navigation">
+
+        <a href="{{ url_for('dashboard') }}"
+           class="back-dashboard-btn">
+            ← Back to Dashboard
+        </a>
+
+    </div>
+
+</div>
+
+<script>
+
+const gradeDropdown =
+    document.getElementById("grade");
+
+const sectionDropdown =
+    document.getElementById("section");
+
+const studentSearch =
+    document.getElementById("student_search");
+
+const studentNo =
+    document.getElementById("student_no");
+
+const studentOptions =
+    document.getElementById("studentOptions");
+
+const studentCount =
+    document.getElementById("studentCount");
+
+const dropdownArrow =
+    document.getElementById("dropdownArrow");
+
+const studentCombobox =
+    document.getElementById("studentCombobox");
+
+const historyForm =
+    document.getElementById("historyForm");
+
+
+let allStudents = [];
+let requestVersion = 0;
+let activeIndex = -1;
+
+
+// RESTORE FILTERS AFTER SEARCH
+
+const savedSection =
+    {{ (section or '')|tojson }};
+
+const savedStudentNo =
+    {{ (student_no|default('', true))|tojson }};
+
+
+// CLOSE DROPDOWN
+
+function closeDropdown() {
+
+    studentOptions.classList.remove("open");
+
+    studentSearch.setAttribute(
+        "aria-expanded",
+        "false"
+    );
+
+    activeIndex = -1;
+}
+
+
+// OPEN DROPDOWN
+
+function openDropdown() {
+
+    if (studentSearch.disabled) return;
+
+    studentOptions.classList.add("open");
+
+    studentSearch.setAttribute(
+        "aria-expanded",
+        "true"
+    );
+}
+
+
+// RESET STUDENT FIELDS
+
+function resetStudents() {
+
+    allStudents = [];
+
+    studentNo.value = "";
+
+    studentSearch.value = "";
+    studentSearch.disabled = true;
+
+    studentSearch.placeholder =
+        "Select Grade and Section first";
+
+    studentOptions.innerHTML = "";
+
+    studentCount.textContent = "";
+
+    dropdownArrow.classList.add("disabled");
+
+    closeDropdown();
+}
+
+
+// SELECT A STUDENT
+
+function selectStudent(student) {
+
+    studentNo.value = student.student_no;
+
+    studentSearch.value = student.student_name;
+
+    closeDropdown();
+}
+
+
+// DISPLAY MATCHING STUDENTS
+
+function renderStudents(searchText) {
+
+    studentOptions.innerHTML = "";
+    activeIndex = -1;
+
+    const search =
+        searchText.trim().toLowerCase();
+
+    const filtered = allStudents.filter(
+        student =>
+            student.student_name
+                .toLowerCase()
+                .includes(search)
+    );
+
+    studentCount.textContent =
+        `${filtered.length} student(s) found`;
+
+    if (filtered.length === 0) {
+
+        const empty =
+            document.createElement("div");
+
+        empty.className =
+            "student-option empty";
+
+        empty.textContent =
+            "No Matching Students";
+
+        studentOptions.appendChild(empty);
+
+    } else {
+
+        filtered.forEach(student => {
+
+            const option =
+                document.createElement("div");
+
+            option.className =
+                "student-option";
+
+            option.setAttribute(
+                "role",
+                "option"
+            );
+
+            option.textContent =
+                student.student_name;
+
+            option.addEventListener(
+                "mousedown",
+                function(event) {
+
+                    event.preventDefault();
+
+                    selectStudent(student);
+                }
+            );
+
+            studentOptions.appendChild(option);
+
+        });
+
+    }
+
+    openDropdown();
+}
+
+
+// LOAD SECTIONS BASED ON GRADE
+
+async function loadSections(restore = false) {
+
+    const version = ++requestVersion;
+
+    const grade = gradeDropdown.value;
+
+    sectionDropdown.innerHTML = "";
+
+    sectionDropdown.add(
+        new Option("All Sections", "")
+    );
+
+    sectionDropdown.disabled = true;
+
+    resetStudents();
+
+    // All Grades does not require loading
+    // individual grade sections.
+    if (!grade) return;
+
+    try {
+
+        const response = await fetch(
+            `/api/roster?grade=${encodeURIComponent(grade)}`
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                "Could not load sections"
+            );
+        }
+
+        const sections = await response.json();
+
+        if (version !== requestVersion) return;
+
+        sectionDropdown.innerHTML = "";
+
+        sectionDropdown.add(
+            new Option("All Sections", "")
+        );
+
+        sections.forEach(item => {
+
+            sectionDropdown.add(
+                new Option(
+                    item.section,
+                    item.section
+                )
+            );
+
+        });
+
+        sectionDropdown.disabled =
+            sections.length === 0;
+
+        if (restore && savedSection) {
+
+            sectionDropdown.value =
+                savedSection;
+
+            if (
+                sectionDropdown.value === savedSection
+            ) {
+                await loadStudents(true);
+            }
+
+        }
+
+    } catch (error) {
+
+        if (version !== requestVersion) return;
+
+        console.error(error);
+
+        sectionDropdown.options[0].text =
+            "Error Loading Sections";
+    }
+}
+
+
+// LOAD STUDENTS BASED ON SECTION
+
+async function loadStudents(restore = false) {
+
+    const version = ++requestVersion;
+
+    const grade = gradeDropdown.value;
+
+    const section = sectionDropdown.value;
+
+    resetStudents();
+
+    if (!grade || !section) return;
+
+    studentSearch.placeholder =
+        "Loading Students...";
+
+    try {
+
+        const response = await fetch(
+            `/api/roster?grade=${encodeURIComponent(grade)}&section=${encodeURIComponent(section)}`
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                "Could not load students"
+            );
+        }
+
+        const students = await response.json();
+
+        if (version !== requestVersion) return;
+
+        allStudents = students;
+
+        studentSearch.disabled =
+            students.length === 0;
+
+        studentSearch.placeholder =
+            students.length
+                ? "Search or select student..."
+                : "No Students Found";
+
+        dropdownArrow.classList.toggle(
+            "disabled",
+            students.length === 0
+        );
+
+        studentCount.textContent =
+            `${students.length} student(s) available`;
+
+        // RESTORE SELECTED STUDENT
+
+        if (restore && savedStudentNo) {
+
+            const selected =
+                allStudents.find(
+                    student =>
+                        String(student.student_no) ===
+                        String(savedStudentNo)
+                );
+
+            if (selected) {
+
+                studentNo.value =
+                    selected.student_no;
+
+                studentSearch.value =
+                    selected.student_name;
+
+            }
+        }
+
+    } catch (error) {
+
+        if (version !== requestVersion) return;
+
+        console.error(error);
+
+        resetStudents();
+    }
+}
+
+
+// WHEN GRADE CHANGES
+
+gradeDropdown.addEventListener(
+    "change",
+    function() {
+        loadSections();
+    }
+);
+
+
+// WHEN SECTION CHANGES
+
+sectionDropdown.addEventListener(
+    "change",
+    function() {
+        loadStudents();
+    }
+);
+
+
+// CLICK STUDENT NAME FIELD
+
+studentSearch.addEventListener(
+    "focus",
+    function() {
+        renderStudents(this.value);
+    }
+);
+
+
+// SEARCH WHILE TYPING
+
+studentSearch.addEventListener(
+    "input",
+    function() {
+
+        studentNo.value = "";
+
+        renderStudents(this.value);
+    }
+);
+
+
+// DROPDOWN ARROW
+
+dropdownArrow.addEventListener(
+    "click",
+    function() {
+
+        if (studentSearch.disabled) return;
+
+        if (
+            studentOptions.classList.contains("open")
+        ) {
+
+            closeDropdown();
+
+        } else {
+
+            studentSearch.focus();
+
+            renderStudents(
+                studentSearch.value
+            );
+        }
+    }
+);
+
+
+// KEYBOARD SUPPORT
+
+studentSearch.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (event.key === "Escape") {
+
+            closeDropdown();
+            return;
+        }
+
+        if (
+            event.key === "ArrowDown" ||
+            event.key === "ArrowUp"
+        ) {
+
+            event.preventDefault();
+
+            if (
+                !studentOptions.classList.contains("open")
+            ) {
+                renderStudents(
+                    studentSearch.value
+                );
+            }
+
+            const options = Array.from(
+                studentOptions.querySelectorAll(
+                    '.student-option[role="option"]'
+                )
+            );
+
+            if (options.length === 0) return;
+
+            if (event.key === "ArrowDown") {
+
+                activeIndex =
+                    (activeIndex + 1) %
+                    options.length;
+
+            } else {
+
+                activeIndex =
+                    (activeIndex - 1 + options.length) %
+                    options.length;
+            }
+
+            options.forEach(
+                (option, index) => {
+
+                    option.classList.toggle(
+                        "active",
+                        index === activeIndex
+                    );
+                }
+            );
+
+            options[activeIndex].scrollIntoView({
+                block: "nearest"
+            });
+        }
+
+        if (
+            event.key === "Enter" &&
+            studentOptions.classList.contains("open")
+        ) {
+
+            const options =
+                studentOptions.querySelectorAll(
+                    '.student-option[role="option"]'
+                );
+
+            if (
+                activeIndex >= 0 &&
+                options[activeIndex]
+            ) {
+
+                event.preventDefault();
+
+                options[activeIndex].dispatchEvent(
+                    new MouseEvent(
+                        "mousedown",
+                        { bubbles: true }
+                    )
+                );
+            }
+        }
+    }
+);
+
+
+// CLOSE WHEN CLICKING OUTSIDE
+
+document.addEventListener(
+    "mousedown",
+    function(event) {
+
+        if (
+            !studentCombobox.contains(
+                event.target
+            )
+        ) {
+
+            closeDropdown();
+        }
+    }
+);
+
+
+// VALIDATE SEARCH
+
+historyForm.addEventListener(
+    "submit",
+    function(event) {
+
+        if (
+            studentSearch.value.trim() &&
+            !studentNo.value
+        ) {
+
+            event.preventDefault();
+
+            alert(
+                "Please select a student from the dropdown, " +
+                "or clear the name field to search the whole section."
+            );
+
+            studentSearch.focus();
+        }
+    }
+);
+
+
+// RESTORE PREVIOUS SEARCH
+
+if (gradeDropdown.value) {
+    loadSections(true);
+}
+
+</script>
+
+</body>
+</html>

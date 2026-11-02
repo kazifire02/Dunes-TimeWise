@@ -1,0 +1,723 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Dunes TimeWise | Punctuality Analytics</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .analytics-container {
+            max-width: 1100px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .analytics-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .analytics-header h1 {
+            color: #800020;
+            margin-bottom: 6px;
+        }
+
+        .analytics-header .subtitle {
+            color: #800020;
+            font-weight: 500;
+        }
+
+        .analytics-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 22px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+        }
+
+        .analytics-card h2 {
+            color: #800020;
+            margin-top: 0;
+        }
+
+        .analytics-filters {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 11px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            background: white;
+            color: #222;
+        }
+
+        .analytics-btn {
+            display: inline-block;
+            background: #800020;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .analytics-btn:hover {
+            background: #600018;
+        }
+
+        .analytics-btn.secondary {
+            background: #555;
+        }
+
+        .analytics-btn.secondary:hover {
+            background: #333;
+        }
+
+        .analytics-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        .stat-box {
+            background: white;
+            border-radius: 12px;
+            padding: 25px 15px;
+            text-align: center;
+            border-top: 5px solid #800020;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.08);
+        }
+
+        .stat-box h2 {
+            font-size: 35px;
+            color: #800020;
+            margin: 0 0 10px;
+        }
+
+        .stat-box p {
+            font-size: 14px;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .analytics-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .analytics-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .analytics-table th {
+            background: #800020;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .analytics-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .analytics-table tr:nth-child(even) {
+            background: #fff8f0;
+        }
+
+        .chart-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .chart-bars {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+            height: 260px;
+            padding: 15px 5px 0;
+            border-bottom: 2px solid #ddd;
+            min-width: 550px;
+        }
+
+        .chart-item {
+            flex: 1;
+            min-width: 12px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .chart-value {
+            font-size: 11px;
+            margin-bottom: 5px;
+            color: #800020;
+            font-weight: bold;
+        }
+
+        .chart-bar {
+            background: #800020;
+            width: 70%;
+            max-width: 50px;
+            min-height: 0;
+            border-radius: 5px 5px 0 0;
+            transition: height 0.3s ease;
+        }
+
+        .chart-labels {
+            display: flex;
+            gap: 8px;
+            min-width: 550px;
+            padding: 8px 5px;
+        }
+
+        .chart-label {
+            flex: 1;
+            min-width: 12px;
+            text-align: center;
+            font-size: 11px;
+            color: #555;
+        }
+
+        .analytics-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .empty-analytics {
+            text-align: center;
+            color: #777;
+            padding: 25px;
+        }
+
+        @media (max-width: 700px) {
+            .analytics-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .analytics-container {
+                padding: 12px;
+            }
+
+            .analytics-card {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="analytics-container">
+
+    <!-- HEADER -->
+
+    <div class="analytics-header">
+
+        <img
+            src="{{ url_for('static', filename='dis_logo.png') }}"
+            alt="Dunes International School Logo"
+            class="school-logo"
+            style="max-height: 90px; width: auto;"
+        >
+
+        <h1>Dunes TimeWise</h1>
+
+        <p class="subtitle">Every Minute Matters.</p>
+
+        <h2>Punctuality Analytics</h2>
+
+        <p>
+            Weekly, Monthly and Yearly
+            Student Late Arrival Statistics
+        </p>
+
+    </div>
+
+    
+<!-- PERIOD FILTERS -->
+
+<div class="analytics-card">
+
+    <h2>Select Reporting Period</h2>
+
+    <form method="GET"
+          action="{{ url_for('analytics') }}"
+          class="analytics-filters">
+
+        <div class="filter-group">
+
+            <label for="period">Report Type</label>
+
+            <select name="period" id="period">
+                <option value="weekly"
+                    {% if settings.period == 'weekly' %}selected{% endif %}>
+                    Weekly
+                </option>
+
+                <option value="monthly"
+                    {% if settings.period == 'monthly' %}selected{% endif %}>
+                    Monthly
+                </option>
+
+                <option value="yearly"
+                    {% if settings.period == 'yearly' %}selected{% endif %}>
+                    Yearly
+                </option>
+            </select>
+
+        </div>
+
+        <div class="filter-group">
+
+            <label for="year">Year</label>
+
+            <select name="year" id="year">
+                {% for year in range(current_year - 5, current_year + 2) %}
+                <option value="{{ year }}"
+                    {% if settings.year == year %}selected{% endif %}>
+                    {{ year }}
+                </option>
+                {% endfor %}
+            </select>
+
+        </div>
+
+        <div class="filter-group" id="monthGroup">
+
+            <label for="month">Month</label>
+
+            <select name="month" id="month">
+
+                {% set month_names = [
+                    'January', 'February', 'March',
+                    'April', 'May', 'June',
+                    'July', 'August', 'September',
+                    'October', 'November', 'December'
+                ] %}
+
+                {% for month in range(1, 13) %}
+                <option value="{{ month }}"
+                    {% if settings.month == month %}selected{% endif %}>
+                    {{ month_names[month - 1] }}
+                </option>
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+        <div class="week-filter" id="weekGroup">
+
+            <label>Select Week</label>
+
+            <div class="week-navigation">
+
+                <button type="button"
+                        id="previousWeek"
+                        class="analytics-btn">
+                    ← Previous Week
+                </button>
+
+                <span id="weekDisplay"></span>
+
+                <button type="button"
+                        id="nextWeek"
+                        class="analytics-btn">
+                    Next Week →
+                </button>
+<!-- PERIOD FILTERS -->
+            </div>
+
+            <input type="hidden"
+                   name="week"
+                   id="week"
+                   value="{{ settings.week }}">
+
+        </div>
+
+        <div class="view-statistics">
+
+            <button type="submit" class="analytics-btn">
+                View Statistics
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+
+
+    <!-- SUMMARY STATISTICS -->
+
+    <div class="analytics-stats">
+
+        <div class="stat-box">
+
+            <h2>{{ stats.total_arrivals }}</h2>
+
+            <p>Total Late Arrivals</p>
+
+        </div>
+
+        <div class="stat-box">
+
+            <h2>{{ stats.unique_students }}</h2>
+
+            <p>Unique Students Late</p>
+
+        </div>
+
+        <div class="stat-box">
+
+            <h2>{{ stats.repeat_students }}</h2>
+
+            <p>Repeat Latecomers (3+ Times)</p>
+
+        </div>
+
+    </div>
+
+    <!-- TREND CHART -->
+
+    <div class="analytics-card">
+
+        <h2>Late Arrival Trends</h2>
+
+        <p>
+            Number of late arrivals during
+            the selected reporting period.
+        </p>
+
+        {% if stats.total_arrivals > 0 %}
+
+            <div class="chart-container">
+
+                <div class="chart-bars"
+                     id="chartBars"></div>
+
+                <div class="chart-labels"
+                     id="chartLabels"></div>
+
+            </div>
+
+        {% else %}
+
+            <div class="empty-analytics">
+
+                No late arrivals recorded
+                for this period.
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+    <!-- GRADE-WISE STATISTICS -->
+
+    <div class="analytics-card">
+
+        <h2>Grade-wise Late Arrivals</h2>
+
+        {% if stats.grade_stats %}
+
+            <div class="analytics-table-wrap">
+
+                <table class="analytics-table">
+
+                    <thead>
+                        <tr>
+                            <th>Grade</th>
+                            <th>Late Arrivals</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for item in stats.grade_stats %}
+
+                        <tr>
+
+                            <td>
+                                {% if item.grade in ['KG1', 'KG2'] %}
+                                    {{ item.grade }}
+                                {% else %}
+                                    Grade {{ item.grade }}
+                                {% endif %}
+                            </td>
+
+                            <td>{{ item.count }}</td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <p>No grade-wise records available.</p>
+
+        {% endif %}
+
+    </div>
+
+
+
+<!-- DOWNLOAD AND NAVIGATION -->
+
+<div class="analytics-bottom-actions">
+
+    <a href="{{ url_for(
+        'export_analytics',
+        period=settings.period,
+        year=settings.year,
+        month=settings.month,
+        week=settings.week
+    ) }}" class="analytics-btn">
+        ↓ Download Excel Report
+    </a>
+
+    <a href="{{ url_for('dashboard') }}"
+       class="analytics-btn secondary">
+        ← Back to Dashboard
+    </a>
+
+</div>
+
+    </div>
+
+</div>
+
+<script>
+
+// SHOW ONLY RELEVANT FILTERS
+
+const periodDropdown =
+    document.getElementById("period");
+
+const monthGroup =
+    document.getElementById("monthGroup");
+
+const weekGroup =
+    document.getElementById("weekGroup");
+
+function updateFilters() {
+
+    const period = periodDropdown.value;
+
+    weekGroup.style.display =
+        period === "weekly" ? "block" : "none";
+
+    monthGroup.style.display =
+        period === "monthly" ? "block" : "none";
+}
+
+periodDropdown.addEventListener(
+    "change",
+    updateFilters
+);
+
+updateFilters();
+
+
+// BUILD TREND CHART
+
+const trendData = {{ stats.trend | tojson }};
+
+const chartBars =
+    document.getElementById("chartBars");
+
+const chartLabels =
+    document.getElementById("chartLabels");
+
+if (chartBars && chartLabels && trendData.length) {
+
+    const maxCount = Math.max(
+        1,
+        ...trendData.map(item => item.count)
+    );
+
+    trendData.forEach(item => {
+
+        const chartItem =
+            document.createElement("div");
+
+        chartItem.className = "chart-item";
+
+        const value =
+            document.createElement("div");
+
+        value.className = "chart-value";
+
+        value.textContent = item.count;
+
+        const bar =
+            document.createElement("div");
+
+        bar.className = "chart-bar";
+
+        bar.style.height =
+            `${(item.count / maxCount) * 200}px`;
+
+        bar.title =
+            `${item.label}: ${item.count} late arrivals`;
+
+        chartItem.appendChild(value);
+        chartItem.appendChild(bar);
+
+        chartBars.appendChild(chartItem);
+
+        const label =
+            document.createElement("div");
+
+        label.className = "chart-label";
+
+        label.textContent = item.label;
+
+        chartLabels.appendChild(label);
+
+    });
+}
+
+const weekInput = document.getElementById("week");
+const yearInput = document.getElementById("year");
+const weekDisplay = document.getElementById("weekDisplay");
+
+function getMondayOfISOWeek(week, year) {
+    const jan4 = new Date(Date.UTC(year, 0, 4));
+    const day = jan4.getUTCDay() || 7;
+
+    jan4.setUTCDate(jan4.getUTCDate() - day + 1);
+    jan4.setUTCDate(jan4.getUTCDate() + (week - 1) * 7);
+
+    return jan4;
+}
+
+function getISOWeekAndYear(date) {
+    const d = new Date(date);
+    const day = d.getUTCDay() || 7;
+
+    d.setUTCDate(d.getUTCDate() + 4 - day);
+
+    const year = d.getUTCFullYear();
+    const yearStart = new Date(Date.UTC(year, 0, 1));
+
+    const week = Math.ceil(
+        (((d - yearStart) / 86400000) + 1) / 7
+    );
+
+    return { week, year };
+}
+
+function updateWeekDisplay() {
+    const week = Number(weekInput.value);
+    const year = Number(yearInput.value);
+
+    const monday = getMondayOfISOWeek(week, year);
+    const sunday = new Date(monday);
+
+    sunday.setUTCDate(sunday.getUTCDate() + 6);
+
+    const formatDate = date =>
+        date.toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            timeZone: "UTC"
+        });
+
+    weekDisplay.textContent =
+        `${formatDate(monday)} – ${formatDate(sunday)}`;
+}
+
+function changeWeek(direction) {
+    const monday = getMondayOfISOWeek(
+        Number(weekInput.value),
+        Number(yearInput.value)
+    );
+
+    monday.setUTCDate(
+        monday.getUTCDate() + direction * 7
+    );
+
+    const result = getISOWeekAndYear(monday);
+
+    weekInput.value = result.week;
+
+    // Add the year if navigation crosses the
+    // currently available year options.
+    if (![...yearInput.options].some(
+        option => Number(option.value) === result.year
+    )) {
+        const option = new Option(
+            result.year,
+            result.year
+        );
+        yearInput.add(option);
+    }
+
+    yearInput.value = result.year;
+
+    updateWeekDisplay();
+
+    // Automatically load the selected week
+    document.querySelector(".analytics-filters").requestSubmit();
+}
+
+document.getElementById("previousWeek")
+    .addEventListener("click", () => changeWeek(-1));
+
+document.getElementById("nextWeek")
+    .addEventListener("click", () => changeWeek(1));
+
+yearInput.addEventListener("change", updateWeekDisplay);
+
+updateWeekDisplay();
+
+
+</script>
+
+</body>
+</html>

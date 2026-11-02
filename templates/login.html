@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Dunes TimeWise | Staff Login</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- School logo and website name -->
+    <div class="login-brand">
+
+        <img src="{{ url_for('static', filename='dis_logo.png') }}"
+             alt="Dunes International School Logo"
+             class="school-logo login-logo">
+
+        <div class="logo">Dunes TimeWise</div>
+
+        <p class="subtitle">Every Minute Matters.</p>
+
+    </div>
+
+    <div class="card">
+
+        <h1>Staff Login</h1>
+
+        <p>Sign in to manage student punctuality and late arrivals.</p>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <p class="login-error">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+
+            <label for="username">Username</label>
+
+            <input type="text"
+                   id="username"
+                   name="username"
+                   autocomplete="username"
+                   required>
+
+            <label for="password">Password</label>
+
+            <input type="password"
+                   id="password"
+                   name="password"
+                   autocomplete="current-password"
+                   required>
+
+            <button type="submit">
+                Sign In
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+</html>
