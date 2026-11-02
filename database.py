@@ -26,6 +26,9 @@ class DictCursor(pg8000.dbapi.Cursor):
 
 
 def dict_cursor(connection):
+    from neon_http import NeonConnection
+    if isinstance(connection, NeonConnection):
+        return connection.cursor()
     return DictCursor(connection)
 
 
@@ -63,6 +66,10 @@ def connect_url(url):
 
 
 def get_connection():
+    url = setting("DATABASE_URL_POOLED") or setting("DATABASE_URL")
+    if url and has_request_context() and request.environ.get("workers.env") is not None:
+        from neon_http import NeonConnection
+        return NeonConnection(str(url))
     hyperdrive = setting("HYPERDRIVE")
     if hyperdrive is not None:
         # Hyperdrive provides the secure Worker-side connection and handles TLS

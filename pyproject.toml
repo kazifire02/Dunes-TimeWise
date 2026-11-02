@@ -10,6 +10,7 @@ dependencies = [
     "pg8000==1.31.6",
     "pycryptodome==3.23.0",
     "tzdata==2026.6",
+    "python-dotenv>=1,<2",
 ]
 
 [dependency-groups]

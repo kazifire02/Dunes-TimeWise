@@ -6,7 +6,7 @@ import shutil
 root = Path(__file__).resolve().parents[1]
 source = root / "src"
 source.mkdir(exist_ok=True)
-for name in ("app.py", "database.py", "passwords.py", "worker.py"):
+for name in ("app.py", "database.py", "neon_http.py", "passwords.py", "worker.py"):
     destination = source / name
     if not destination.exists() or destination.read_bytes() != (root / name).read_bytes():
         shutil.copy2(root / name, destination)
