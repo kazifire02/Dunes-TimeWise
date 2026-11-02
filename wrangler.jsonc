@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "dunes-timewise",
+  "main": "src/worker.py",
+  "compatibility_date": "2026-11-02",
+  "compatibility_flags": ["python_workers"],
+  // Create a Hyperdrive configuration for Neon, then uncomment this line
+  // and replace the placeholder with its configuration ID (not a password):
+  // "hyperdrive": [{"binding": "HYPERDRIVE", "id": "YOUR_HYPERDRIVE_ID"}],
+  "build": {
+    "command": "uv run python scripts/build_worker.py"
+  },
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  }
+}
