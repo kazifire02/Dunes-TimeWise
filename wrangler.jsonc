@@ -4,9 +4,18 @@
   "main": "src/worker.py",
   "compatibility_date": "2026-11-02",
   "compatibility_flags": ["python_workers"],
-  // Create a Hyperdrive configuration for Neon, then uncomment this line
-  // and replace the placeholder with its configuration ID (not a password):
-  // "hyperdrive": [{"binding": "HYPERDRIVE", "id": "YOUR_HYPERDRIVE_ID"}],
+  // Set DATABASE_URL_POOLED and LATETRACK_SECRET_KEY in the Worker dashboard.
+  // Keep credentials out of this file and preserve dashboard variables on deploy.
+  "keep_vars": true,
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true,
+      "persist": true
+    }
+  },
   "build": {
     "command": "uv run python scripts/build_worker.py && uv run pywrangler sync --force && uv run python scripts/verify_worker_packages.py"
   },
