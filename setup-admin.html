@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TimeWise admin setup — local utility</title>
+<style>
+body{font:16px system-ui;max-width:720px;margin:48px auto;padding:0 24px;line-height:1.6}
+label{display:block;margin-top:16px}input,button,textarea{font:inherit;padding:10px;box-sizing:border-box;width:100%}
+button{margin-top:20px;cursor:pointer}textarea{height:180px;margin-top:16px}
+</style>
+<h1>Create your first admin</h1>
+<p>This utility runs entirely in your browser. It sends nothing over the network.
+Run <code>schema.sql</code> in Neon's SQL Editor first, then paste the generated SQL there.</p>
+<form id="setup">
+<label>Username <input id="username" value="admin" required autocomplete="username"></label>
+<label>Password (at least 12 characters) <input id="password" type="password" minlength="12" required autocomplete="new-password"></label>
+<label>Confirm password <input id="confirmation" type="password" required autocomplete="new-password"></label>
+<button id="generate">Generate admin SQL</button>
+</form>
+<p id="status" role="status"></p>
+<textarea id="sql" readonly aria-label="SQL to paste into Neon"></textarea>
+<p>Keep the SQL private: it contains your password hash. Close this utility after use.
+Existing MySQL users can instead be copied using the included migration script.</p>
+<script>
+const hex = bytes => Array.from(new Uint8Array(bytes), b => b.toString(16).padStart(2,'0')).join('');
+document.querySelector('#setup').addEventListener('submit', async event => {
+  event.preventDefault();
+  const status = document.querySelector('#status');
+  const button = document.querySelector('#generate');
+  const password = document.querySelector('#password');
+  const confirmation = document.querySelector('#confirmation');
+  const output = document.querySelector('#sql');
+  output.value = '';
+  if (password.value !== confirmation.value) { status.textContent = 'Passwords do not match.'; return; }
+  button.disabled = true;
+  status.textContent = 'Generating password hash…';
+  try {
+    const encoder = new TextEncoder();
+    const salt = hex(crypto.getRandomValues(new Uint8Array(16)));
+    const key = await crypto.subtle.importKey('raw', encoder.encode(password.value), 'PBKDF2', false, ['deriveBits']);
+    const digest = await crypto.subtle.deriveBits({name:'PBKDF2', hash:'SHA-256', salt:encoder.encode(salt), iterations:1000000}, key, 256);
+    const hash = `pbkdf2:sha256:1000000$${salt}$${hex(digest)}`;
+    const username = document.querySelector('#username').value.trim().replaceAll("'", "''");
+    if (!username) throw new Error('Username is required.');
+    output.value = `INSERT INTO staff_users (username, password_hash, role) VALUES ('${username}', '${hash}', 'admin');`;
+    password.value = ''; confirmation.value = '';
+    status.textContent = 'Copy the SQL into Neon’s SQL Editor and run it once.';
+  } catch (error) { status.textContent = error.message; }
+  finally { button.disabled = false; }
+});
+</script>
+</html>

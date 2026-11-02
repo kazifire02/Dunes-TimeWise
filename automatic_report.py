@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-import mysql.connector
+from database import get_connection, dict_cursor
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 
@@ -19,16 +19,10 @@ REPORT_FOLDER.mkdir(exist_ok=True)
 filename = f"LateArrivals_{report_date:%Y-%m-%d}.xlsx"
 file_path = REPORT_FOLDER / filename
 
-# IMPORTANT: Use the same database settings as app.py
-connection = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="root",
-    database="latetrack"
-)
+connection = get_connection()
 
 try:
-    cursor = connection.cursor(dictionary=True)
+    cursor = dict_cursor(connection)
 
     cursor.execute(
         """

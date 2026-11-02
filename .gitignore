@@ -1,0 +1,17 @@
+.venv*/
+.wrangler/
+node_modules/
+python_modules/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+public/
+src/
+bundled_templates.py
+reports_archive/
+*.csv

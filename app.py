@@ -3,14 +3,14 @@ from flask import (
     Flask, render_template, request, redirect,
     url_for, flash, session, jsonify, send_file
 )
-import mysql.connector
+from database import get_connection, dict_cursor
 from datetime import datetime, timedelta, date
 from zoneinfo import ZoneInfo
 from io import BytesIO
 from calendar import monthrange
 from collections import Counter
 from functools import wraps
-from werkzeug.security import check_password_hash
+from passwords import check_password_hash
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.chart import BarChart, Reference
@@ -32,19 +32,6 @@ app.config.update(
     PERMANENT_SESSION_LIFETIME=timedelta(hours=8)
 )
 
-
-
-# =====================================================
-# DATABASE CONNECTION
-# =====================================================
-
-def get_connection():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="root",
-        database="latetrack"
-    )
 
 
 # =====================================================
@@ -76,14 +63,14 @@ def login():
         )
 
         con = get_connection()
-        cursor = con.cursor(dictionary=True)
+        cursor = dict_cursor(con)
 
         try:
             cursor.execute(
                 """
                 SELECT *
                 FROM staff_users
-                WHERE username = %s
+                WHERE LOWER(username) = LOWER(%s)
                 """,
                 (username,)
             )
@@ -133,7 +120,7 @@ def student_search_api():
         return jsonify([])
 
     con = get_connection()
-    cursor = con.cursor(dictionary=True)
+    cursor = dict_cursor(con)
 
     try:
         cursor.execute(
@@ -144,8 +131,8 @@ def student_search_api():
                 grade,
                 section
             FROM student_roster
-            WHERE is_active = 1
-            AND student_name LIKE %s
+            WHERE is_active = TRUE
+            AND student_name ILIKE %s
             ORDER BY student_name, grade, section
             LIMIT 50
             """,
@@ -216,7 +203,7 @@ def register():
             return redirect(url_for("register"))
 
         con = get_connection()
-        cursor = con.cursor(dictionary=True)
+        cursor = dict_cursor(con)
 
         try:
 
@@ -230,7 +217,7 @@ def register():
                     section
                 FROM student_roster
                 WHERE student_no = %s
-                  AND is_active = 1
+                  AND is_active = TRUE
                 LIMIT 1
                 """,
                 (student_no,)
@@ -370,7 +357,7 @@ def new_admission():
             return redirect(url_for("new_admission"))
 
         con = get_connection()
-        cursor = con.cursor(dictionary=True)
+        cursor = dict_cursor(con)
 
         try:
 
@@ -448,7 +435,7 @@ def remove_student():
             return redirect(url_for("remove_student"))
 
         con = get_connection()
-        cursor = con.cursor(dictionary=True)
+        cursor = dict_cursor(con)
 
         try:
             # Check that the student is currently active
@@ -456,7 +443,7 @@ def remove_student():
                 """
                 SELECT student_no, student_name, grade, section
                 FROM student_roster
-                WHERE student_no = %s AND is_active = 1
+                WHERE student_no = %s AND is_active = TRUE
                 LIMIT 1
                 """,
                 (student_no,)
@@ -472,8 +459,8 @@ def remove_student():
             cursor.execute(
                 """
                 UPDATE student_roster
-                SET is_active = 0
-                WHERE student_no = %s AND is_active = 1
+                SET is_active = FALSE
+                WHERE student_no = %s AND is_active = TRUE
                 """,
                 (student_no,)
             )
@@ -497,14 +484,14 @@ def remove_student():
 
     if search_number:
         con = get_connection()
-        cursor = con.cursor(dictionary=True)
+        cursor = dict_cursor(con)
 
         try:
             cursor.execute(
                 """
                 SELECT student_no, student_name, grade, section
                 FROM student_roster
-                WHERE student_no = %s AND is_active = 1
+                WHERE student_no = %s AND is_active = TRUE
                 LIMIT 1
                 """,
                 (search_number,)
@@ -557,7 +544,7 @@ def get_punctuality_alerts(year=None, month=None):
         end = date(year, month + 1, 1)
 
     con = get_connection()
-    cursor = con.cursor(dictionary=True)
+    cursor = dict_cursor(con)
 
     try:
         cursor.execute(
@@ -780,7 +767,7 @@ def dashboard():
         )
 
     con = get_connection()
-    cursor = con.cursor(dictionary=True)
+    cursor = dict_cursor(con)
 
     try:
         cursor.execute(
@@ -884,7 +871,7 @@ def get_report_data(report_date, grade="", section=""):
     query += " ORDER BY arrival_time ASC"
 
     con = get_connection()
-    cursor = con.cursor(dictionary=True)
+    cursor = dict_cursor(con)
 
     try:
         cursor.execute(query, tuple(params))
@@ -1075,7 +1062,7 @@ def roster_api():
         return jsonify([])
 
     con = get_connection()
-    cursor = con.cursor(dictionary=True)
+    cursor = dict_cursor(con)
 
     try:
         if not section:
@@ -1136,7 +1123,7 @@ def student_history():
 
     if not error:
         con = get_connection()
-        cursor = con.cursor(dictionary=True)
+        cursor = dict_cursor(con)
 
         try:
             if student_no:
@@ -1306,7 +1293,7 @@ def get_analytics_period():
 def get_analytics_data(start, end):
 
     con = get_connection()
-    cursor = con.cursor(dictionary=True)
+    cursor = dict_cursor(con)
 
     try:
         cursor.execute(
@@ -2291,4 +2278,4 @@ def export_analytics():
 # =====================================================
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
