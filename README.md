@@ -88,7 +88,7 @@ repository if necessary and set:
 | --- | --- |
 | Production branch | `main` |
 | Root directory | Repository root |
-| Build command | `uv sync --locked && uv run python scripts/build_worker.py` |
+| Build command | `uv sync --locked` |
 | Deploy command | `uv run pywrangler deploy` |
 
 The name in `wrangler.jsonc` must match your existing Worker's name. The example
@@ -112,6 +112,12 @@ The build bundles the nine Jinja templates into Python source and copies only th
 CSS/logo into public assets. Generated `src/`, `public/`, and dependency folders are
 ignored by Git and rebuilt automatically. The offline admin utility and database
 scripts are excluded from the deployed Worker.
+
+Wrangler's configured build hook also runs `pywrangler sync --force` to install
+the Python runtime packages into `python_modules/` and verifies those packages
+before upload. This hook runs even when Cloudflare uses its default
+`npx wrangler deploy` command. Installing packages only into the native `.venv`
+does not make them available to the deployed Python Worker.
 
 ## 5. Check the deployment
 
