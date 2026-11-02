@@ -40,7 +40,7 @@ class NeonCursor:
 
         sql, values = convert_paramstyle("format", query, params)
         response = run_sync(fetch(
-            self.connection.endpoint, method="POST", redirect="error",
+            self.connection.endpoint, method="POST", redirect="manual",
             headers={"Content-Type": "application/json",
                      "Neon-Connection-String": self.connection.url,
                      "Neon-Raw-Text-Output": "true", "Neon-Array-Mode": "true"},
