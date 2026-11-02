@@ -16,6 +16,9 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.chart import BarChart, Reference
 from openpyxl.utils import get_column_letter
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 # =====================================================
